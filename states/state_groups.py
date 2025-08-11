@@ -7,6 +7,7 @@ class startSG(StatesGroup):
     start = State()
     rate_choose = State()
     about = State()
+    rules = State()
 
 
 class SubSG(StatesGroup):

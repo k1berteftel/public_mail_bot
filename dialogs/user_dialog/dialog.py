@@ -13,6 +13,7 @@ user_dialog = Dialog(
         Column(
             SwitchTo(Const('👑Выбрать тариф'), id='rate_choose_switcher', state=startSG.rate_choose),
             SwitchTo(Const('ℹ️О боте'), id='about_switcher', state=startSG.about),
+            SwitchTo(Const('📋Правила'), id='rules_switcher', state=startSG.rules),
             Url(Const('🔗Тех.поддержка'), id='tech_url', url=Const('https://t.me/Leggit_Russia')),
             Start(Const('Админ панель'), id='admin', state=adminSG.start, when='admin')
         ),
@@ -35,5 +36,14 @@ user_dialog = Dialog(
         SwitchTo(Const('⬅️Назад'), id='back', state=startSG.start),
         getter=getters.about_getter,
         state=startSG.about
+    ),
+    Window(
+        Const('<b>📄Правила по использованию бота</b>'),
+        Column(
+            Url(Const('🔗Политика конфиденциальности'), id='policy_url', url=Const('https://teletype.in/@leggit/LQXR_kR-SsG')),
+            Url(Const('🔗Пользовательское соглашение'), id='rules_url', url=Const('https://teletype.in/@leggit/ku5f9EjAOKo')),
+        ),
+        SwitchTo(Const('⬅️Назад'), id='back', state=startSG.start),
+        state=startSG.rules
     )
 )
