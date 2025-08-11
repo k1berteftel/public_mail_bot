@@ -103,6 +103,6 @@ async def process_malling(account: str, base: list[str], user_id: int, text: str
     print(f"⏸️ FloodWait: {len(results['flood_wait'])}")
     await bot.send_message(
         chat_id=user_id,
-        text=f'Рассылка прошла успешно!\n\nСообщение получило <em>{len(results['sent'])}</em> пользователей'
+        text=f'Рассылка прошла успешно!\n\nСообщение получило <em>{len(results["sent"])}</em> пользователей'
     )
     return results
