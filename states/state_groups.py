@@ -15,6 +15,10 @@ class SubSG(StatesGroup):
 
     rate_choose = State()
 
+    collect_base = State()
+    my_channels = State()
+    choose_get_type = State()
+
     choose_account = State()
     get_usernames = State()
     get_message = State()

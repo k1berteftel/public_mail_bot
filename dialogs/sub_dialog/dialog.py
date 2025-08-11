@@ -13,7 +13,8 @@ sub_dialog = Dialog(
     Window(
         Format('<b>🏠Вы в главном меню</b>\n⌛️Подписка действительна до: {sub}'),
         Column(
-            SwitchTo(Const('✉️Запустить рассылку'), id='choose_account_switcher', state=SubSG.choose_account),
+            Button(Const('✉️Запустить рассылку'), id='mail_account_choose', on_click=getters.choose_account_switcher),
+            Button(Const('🗂Собрать базу'), id='base_account_choose', on_click=getters.choose_account_switcher),
             SwitchTo(Const('👥Управление аккаунтами'), id='accounts_switcher', state=SubSG.accounts),
             SwitchTo(Const('👑Продлить подписку'), id='rate_choose_switcher', state=SubSG.rate_choose),
             SwitchTo(Const('📋Правила'), id='rules_switcher', state=SubSG.rules),
@@ -165,5 +166,56 @@ sub_dialog = Dialog(
         ),
         SwitchTo(Const('⬅️Назад'), id='back', state=SubSG.start),
         state=SubSG.rules
-    )
+    ),
+    Window(
+        Format('🗂<b>Кол-во человек в базе:</b> {users}'),
+        Const('Введите ссылку на канал с которого надо будет собрать базу пользователей'
+              '\n<em>❗️Если же канал является закрытым, то перешлите любое сообщение из данного канала, чтобы'
+              ' бот смог вручную достать необходимые данные</em>'),
+        TextInput(
+            id='get_channel_link',
+            on_success=getters.get_channel
+        ),
+        MessageInput(
+            func=getters.get_forward_message,
+            content_types=ContentType.ANY
+        ),
+        Column(
+            Button(Const('⤵️Выгрузить базу'), id='get_type_switcher', on_click=getters.get_type_switcher),
+            SwitchTo(Const('💬Мои каналы|чаты'), id='my_channels_switcher', state=SubSG.my_channels),
+        ),
+        SwitchTo(Const('⬅️Назад'), id='back', state=SubSG.start),
+        getter=getters.collect_base_getter,
+        state=SubSG.collect_base
+    ),
+    Window(
+        Const('Выберите способ выгрузки контактов'),
+        Column(
+            Button(Const('📝Текстом'), id='text_type_choose', on_click=getters.type_choose),
+            Button(Const('📓Таблицей'), id='table_type_choose', on_click=getters.type_choose),
+        ),
+        SwitchTo(Const('⬅️Назад'), id='back_collect_base', state=SubSG.collect_base),
+        state=SubSG.choose_get_type
+    ),
+    Window(
+        Const('Выберите канал | чат для сбора базы'),
+        Group(
+            Select(
+                Format('{item[0]}'),
+                id='my_chats_builder',
+                item_id_getter=lambda x: x[1],
+                items='items',
+                on_click=getters.my_chat_selector
+            ),
+            width=1
+        ),
+        Row(
+            Button(Const('◀️'), id='back_my_chat_pager', on_click=getters.my_channels_pager, when='not_first'),
+            Button(Format('{open_page}/{last_page}'), id='pager'),
+            Button(Const('▶️'), id='next_my_chat_pager', on_click=getters.my_channels_pager, when='not_last'),
+        ),
+        SwitchTo(Const('⬅️Назад'), id='back_collect_base', state=SubSG.collect_base),
+        getter=getters.my_channels_getter,
+        state=SubSG.my_channels
+    ),
 )

@@ -1,6 +1,7 @@
 import os
 
-from aiogram.types import CallbackQuery, User, Message, ContentType
+from aiogram import Bot
+from aiogram.types import CallbackQuery, User, Message, ContentType, FSInputFile
 from aiogram_dialog import DialogManager, ShowMode
 from aiogram_dialog.api.entities import MediaAttachment
 from aiogram_dialog.widgets.kbd import Button, Select
@@ -10,6 +11,7 @@ from pyrogram.types import SentCode
 from pyrogram.errors import PasswordHashInvalid
 
 from utils.malling_funcs import process_malling
+from utils.collect_funcs import collect_users_base, get_channels
 from utils.usernames_utils import add_usernames
 from utils.tables_parse import load_usernames, get_table
 from database.action_data_class import DataInteraction
@@ -27,16 +29,156 @@ async def start_getter(event_from_user: User, dialog_manager: DialogManager, **k
     return {'sub': text}
 
 
-async def get_usernames_getter(event_from_user: User, dialog_manager: DialogManager, **kwargs):
-    document = None
-    base = dialog_manager.dialog_data.get('base')
+async def collect_base_getter(event_from_user: User, dialog_manager: DialogManager, **kwargs):
+    base = dialog_manager.dialog_data.get('users')
     if not base:
         base = []
-        dialog_manager.dialog_data['base'] = base
-    if base:
-        document = get_table(base, f'Пользователи_{event_from_user.id}')
-        document = MediaAttachment(path=document, type=ContentType.DOCUMENT)
-    return {'document': document}
+        dialog_manager.dialog_data['users'] = base
+    return {'users': len(base)}
+
+
+async def choose_account_switcher(clb: CallbackQuery, widget: Button, dialog_manager: DialogManager):
+    select = clb.data.split('_')[0]
+    dialog_manager.dialog_data['select'] = select
+    await dialog_manager.switch_to(SubSG.choose_account)
+
+
+async def clean_base(clb: CallbackQuery, widget: Button, dialog_manager: DialogManager):
+    dialog_manager.dialog_data['users'] = None
+    await clb.answer('База пользователей была успешно почищена')
+    await dialog_manager.switch_to(SubSG.collect_base)
+
+
+async def get_channel(msg: Message, widget: ManagedTextInput, dialog_manager: DialogManager, text: str):
+    try:
+        text = int(text)
+    except Exception as err:
+        print(err)
+        if 't.me' not in text:
+            await msg.answer('❗️Вы ввели ссылку не в том формате, пожалуйста попробуйте снова')
+            return
+        try:
+            text = text.split('/')[-1]
+        except Exception:
+            await msg.answer('❗️Вы ввели ссылку не в том формате, пожалуйста попробуйте снова')
+            return
+    account_id = dialog_manager.dialog_data.get('account_id')
+    session: DataInteraction = dialog_manager.middleware_data.get('session')
+    account = await session.get_account(account_id)
+    message = await msg.answer('Начался процесс сбора базы')
+    users = dialog_manager.dialog_data.get('users')
+    users = await collect_users_base(account.account_name, msg.from_user.id, text, msg.bot, users)
+    if not users:
+        await msg.answer('❗️При сборе базы произошла какая-то ошибка пожалуйста попробуйте снова')
+        await dialog_manager.switch_to(SubSG.collect_base)
+        return
+    dialog_manager.dialog_data['users'] = users
+    await message.delete()
+    await dialog_manager.switch_to(SubSG.collect_base)
+
+
+async def get_forward_message(msg: Message, widget: MessageInput, dialog_manager: DialogManager):
+    if msg.forward_from_chat is None:
+        await msg.answer('❗️К сожалению невозможно получить данные о канале из-за правил конфиденциальности канала')
+        return
+    session: DataInteraction = dialog_manager.middleware_data.get('session')
+    account_id = dialog_manager.dialog_data.get('account_id')
+    account = await session.get_account(account_id)
+    users = dialog_manager.dialog_data.get('users')
+    users = await collect_users_base(account.account_name, msg.from_user.id, msg.forward_from_chat.id, msg.bot, users)
+    if not users:
+        await msg.answer('❗️При сборе базы произошла какая-то ошибка пожалуйста попробуйте снова')
+        await dialog_manager.switch_to(SubSG.collect_base)
+        return
+    dialog_manager.dialog_data['users'] = users
+    await dialog_manager.switch_to(SubSG.collect_base)
+
+
+async def my_channels_getter(event_from_user: User, dialog_manager: DialogManager, **kwargs):
+    page = dialog_manager.dialog_data.get('chat_page')
+    session: DataInteraction = dialog_manager.middleware_data.get('session')
+    account_id = dialog_manager.dialog_data.get('account_id')
+    account = await session.get_account(account_id)
+    bot: Bot = dialog_manager.middleware_data.get('bot')
+    if not page:
+        page = 0
+        dialog_manager.dialog_data['chat_page'] = page
+    dialogs = dialog_manager.dialog_data.get('chats')
+    if not dialogs:
+        dialogs = await get_channels(account.account_name, bot, event_from_user.id)
+        dialogs = [dialogs[i:i + 20] for i in range(0, len(dialogs), 20)]
+        dialog_manager.dialog_data['chats'] = dialogs
+    not_first = True
+    not_last = True
+    if page == 0:
+        not_first = False
+    if page == len(dialogs) - 1:
+        not_last = False
+    return {
+        'items': dialogs[page],
+        'not_first': not_first,
+        'not_last': not_last,
+        'open_page': str(page + 1),
+        'last_page': str(len(dialogs))
+    }
+
+
+async def my_channels_pager(clb: CallbackQuery, widget: Button, dialog_manager: DialogManager):
+    page = dialog_manager.dialog_data.get('chat_page')
+    if clb.data.startswith('back'):
+        dialog_manager.dialog_data['chat_page'] = page - 1
+    else:
+        dialog_manager.dialog_data['chat_page'] = page + 1
+    await dialog_manager.switch_to(SubSG.my_channels)
+
+
+async def my_chat_selector(clb: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: str):
+    await clb.answer('Начался процесс считывания базы пользователей, пожалуйста ожидайте')
+    users = dialog_manager.dialog_data.get('users')
+    session: DataInteraction = dialog_manager.middleware_data.get('session')
+    session: DataInteraction = dialog_manager.middleware_data.get('session')
+    account_id = dialog_manager.dialog_data.get('account_id')
+    account = await session.get_account(account_id)
+    users = await collect_users_base(account.account_name, clb.from_user.id, int(item_id), clb.bot, users)
+    if not users:
+        await clb.message.answer('❗️При сборе базы произошла какая-то ошибка пожалуйста попробуйте снова')
+        await dialog_manager.switch_to(SubSG.collect_base)
+        return
+    dialog_manager.dialog_data['users'] = users
+    await dialog_manager.switch_to(SubSG.collect_base)
+
+
+async def get_type_switcher(clb: CallbackQuery, widget: Button, dialog_manager: DialogManager):
+    users = dialog_manager.dialog_data.get('users')
+    if not users:
+        await clb.answer('❗️Перед тем как перейти в выгрузке соберите хотя бы минимальную базу')
+        return
+    await dialog_manager.switch_to(SubSG.choose_get_type)
+
+
+async def type_choose(clb: CallbackQuery, widget: Button, dialog_manager: DialogManager):
+    discharge = clb.data.split('_')[0]
+    users = dialog_manager.dialog_data.get('users')
+    if discharge == 'text':
+        text = ''
+        for username in users:
+            if len(text) >= 4050:
+                await clb.message.answer(text)
+                text = ''
+            text += '@' + username + '\n'
+        await clb.message.answer(text)
+    else:
+        usernames = ['@' + username for username in users]
+        table = get_table(usernames, f'База_{clb.from_user.id}')
+        await clb.message.answer_document(
+            document=FSInputFile(path=table)
+        )
+        try:
+            os.remove(table)
+        except Exception:
+            ...
+    dialog_manager.dialog_data.clear()
+    await dialog_manager.switch_to(SubSG.start, show_mode=ShowMode.DELETE_AND_SEND)
 
 
 async def choose_account_getter(event_from_user: User, dialog_manager: DialogManager, **kwargs):
@@ -51,8 +193,25 @@ async def choose_account_getter(event_from_user: User, dialog_manager: DialogMan
 
 
 async def choose_account_selector(clb: CallbackQuery, widget: Select, dialog_manager: DialogManager, item_id: str):
+    select = dialog_manager.dialog_data.get('select')
+    dialog_manager.dialog_data.clear()
     dialog_manager.dialog_data['account_id'] = int(item_id)
-    await dialog_manager.switch_to(SubSG.get_usernames)
+    if select == 'mail':
+        await dialog_manager.switch_to(SubSG.get_usernames)
+    else:
+        await dialog_manager.switch_to(SubSG.collect_base)
+
+
+async def get_usernames_getter(event_from_user: User, dialog_manager: DialogManager, **kwargs):
+    document = None
+    base = dialog_manager.dialog_data.get('base')
+    if not base:
+        base = []
+        dialog_manager.dialog_data['base'] = base
+    if base:
+        document = get_table(base, f'Пользователи_{event_from_user.id}')
+        document = MediaAttachment(path=document, type=ContentType.DOCUMENT)
+    return {'document': document}
 
 
 async def get_table_usernames(msg: Message, widget: MessageInput, dialog_manager: DialogManager):

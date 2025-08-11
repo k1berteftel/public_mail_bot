@@ -27,7 +27,7 @@ class AccountsTable(Base):
     __tablename__ = 'accounts'
 
     id: Mapped[int] = mapped_column(BigInteger, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(BigInteger, unique=True)
+    user_id: Mapped[int] = mapped_column(BigInteger)
     account_name: Mapped[str] = mapped_column(VARCHAR)
 
 
