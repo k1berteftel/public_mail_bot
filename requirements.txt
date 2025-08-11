@@ -11,6 +11,7 @@ SQLAlchemy
 pytz
 aiocryptopay
 kurigram
+tgcrypto
 dateutils
 fastapi
 uvicorn
