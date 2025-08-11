@@ -28,6 +28,8 @@ class SubSG(StatesGroup):
     kod_send = State()
     get_password = State()
 
+    rules = State()
+
 
 class PaymentSG(StatesGroup):
     payment_type = State()

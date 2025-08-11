@@ -16,6 +16,7 @@ sub_dialog = Dialog(
             SwitchTo(Const('✉️Запустить рассылку'), id='choose_account_switcher', state=SubSG.choose_account),
             SwitchTo(Const('👥Управление аккаунтами'), id='accounts_switcher', state=SubSG.accounts),
             SwitchTo(Const('👑Продлить подписку'), id='rate_choose_switcher', state=SubSG.rate_choose),
+            SwitchTo(Const('📋Правила'), id='rules_switcher', state=SubSG.rules),
             Url(Const('🔎Инструкция'), id='manual_url', url=Const('https://telegra.ph/Instrukciya-po-ispolzovaniyu-bota-08-09')),
             Url(Const('🔗Тех.поддержка'), id='tech_url', url=Const('https://t.me/Leggit_Russia'))
         ),
@@ -154,4 +155,15 @@ sub_dialog = Dialog(
         ),
         state=SubSG.get_password
     ),
+    Window(
+        Const('<b>📄Правила по использованию бота</b>'),
+        Column(
+            Url(Const('🔗Политика конфиденциальности'), id='policy_url',
+                url=Const('https://teletype.in/@leggit/LQXR_kR-SsG')),
+            Url(Const('🔗Пользовательское соглашение'), id='rules_url',
+                url=Const('https://teletype.in/@leggit/ku5f9EjAOKo')),
+        ),
+        SwitchTo(Const('⬅️Назад'), id='back', state=SubSG.start),
+        state=SubSG.rules
+    )
 )
