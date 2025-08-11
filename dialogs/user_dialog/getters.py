@@ -35,11 +35,11 @@ async def start_getter(event_from_user: User, dialog_manager: DialogManager, **k
 async def rate_choose(clb: CallbackQuery, widget: Button, dialog_manager: DialogManager):
     months = int(clb.data.split('_')[0])
     if months == 1:
-        price = 10
+        price = 1000
     elif months == 3:
-        price = 20
+        price = 2000
     else:
-        price = 30
+        price = 3000
     data = {
         'months': months,
         'amount': price
