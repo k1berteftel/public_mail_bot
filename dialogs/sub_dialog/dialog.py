@@ -16,7 +16,7 @@ sub_dialog = Dialog(
             SwitchTo(Const('✉️Запустить рассылку'), id='choose_account_switcher', state=SubSG.choose_account),
             SwitchTo(Const('👥Управление аккаунтами'), id='accounts_switcher', state=SubSG.accounts),
             SwitchTo(Const('👑Продлить подписку'), id='rate_choose_switcher', state=SubSG.rate_choose),
-            Url(Const('🔎Инструкция'), id='manual_url', url=Const('https://telegra.ph/Instrukciya-po-ispolzovaniyu-08-08-2')),
+            Url(Const('🔎Инструкция'), id='manual_url', url=Const('https://telegra.ph/Instrukciya-po-ispolzovaniyu-bota-08-09')),
             Url(Const('🔗Тех.поддержка'), id='tech_url', url=Const('https://t.me/Leggit_Russia'))
         ),
         getter=getters.start_getter,
@@ -51,7 +51,7 @@ sub_dialog = Dialog(
             content_types=ContentType.DOCUMENT
         ),
         SwitchTo(Const('✅База собранна'), id='get_message_switcher', state=SubSG.get_message),
-        Url(Const('📋Инструкция'), id='manual_url', url=Const('https://telegra.ph/Instrukciya-po-ispolzovaniyu-08-08-2')),
+        Url(Const('📋Инструкция'), id='manual_url', url=Const('https://telegra.ph/Instrukciya-po-ispolzovaniyu-bota-08-09')),
         SwitchTo(Const('⬅️Назад'), id='back_choose_account', state=SubSG.choose_account),
         getter=getters.get_usernames_getter,
         state=SubSG.get_usernames

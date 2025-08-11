@@ -9,10 +9,10 @@ from states.state_groups import startSG, adminSG
 
 user_dialog = Dialog(
     Window(
-        Const('Приветственный текст'),
+        Format('{text}'),
         Column(
-            SwitchTo(Const('👑Приобрести подписку'), id='rate_choose_switcher', state=startSG.rate_choose),
-            SwitchTo(Const('🔎О боте'), id='about_switcher', state=startSG.about),
+            SwitchTo(Const('👑Выбрать тариф'), id='rate_choose_switcher', state=startSG.rate_choose),
+            SwitchTo(Const('ℹ️О боте'), id='about_switcher', state=startSG.about),
             Url(Const('🔗Тех.поддержка'), id='tech_url', url=Const('https://t.me/Leggit_Russia')),
             Start(Const('Админ панель'), id='admin', state=adminSG.start, when='admin')
         ),
@@ -31,6 +31,7 @@ user_dialog = Dialog(
     ),
     Window(
         Format('{text}'),
+        SwitchTo(Const('👑Выбрать тариф'), id='rate_choose_switcher', state=startSG.rate_choose),
         SwitchTo(Const('⬅️Назад'), id='back', state=startSG.start),
         getter=getters.about_getter,
         state=startSG.about

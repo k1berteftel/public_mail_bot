@@ -1,4 +1,6 @@
-from aiogram.types import CallbackQuery, User, Message
+import os
+
+from aiogram.types import CallbackQuery, User, Message, ContentType
 from aiogram_dialog import DialogManager, ShowMode
 from aiogram_dialog.api.entities import MediaAttachment
 from aiogram_dialog.widgets.kbd import Button, Select
@@ -28,8 +30,12 @@ async def start_getter(event_from_user: User, dialog_manager: DialogManager, **k
 async def get_usernames_getter(event_from_user: User, dialog_manager: DialogManager, **kwargs):
     document = None
     base = dialog_manager.dialog_data.get('base')
+    if not base:
+        base = []
+        dialog_manager.dialog_data['base'] = base
     if base:
         document = get_table(base, f'Пользователи_{event_from_user.id}')
+        document = MediaAttachment(path=document, type=ContentType.DOCUMENT)
     return {'document': document}
 
 
@@ -63,7 +69,7 @@ async def get_table_usernames(msg: Message, widget: MessageInput, dialog_manager
 
 async def get_usernames(msg: Message, widget: ManagedTextInput, dialog_manager: DialogManager, text: str):
     text.strip()
-    usernames = text.strip('\n')
+    usernames = text.strip().split('\n')
     new_data = []
     for username in usernames:
         if username.startswith('@'):
@@ -75,8 +81,7 @@ async def get_usernames(msg: Message, widget: ManagedTextInput, dialog_manager: 
 
 
 async def get_message(msg: Message, widget: MessageInput, dialog_manager: DialogManager):
-    dialog_manager.dialog_data['message_id'] = msg.message_id
-    dialog_manager.dialog_data['chat_id'] = msg.chat.id
+    dialog_manager.dialog_data['text'] = msg.html_text
     await dialog_manager.switch_to(SubSG.confirm_malling)
 
 
@@ -89,16 +94,21 @@ async def start_malling(clb: CallbackQuery, widget: Button, dialog_manager: Dial
     session: DataInteraction = dialog_manager.middleware_data.get('session')
     account_id = dialog_manager.dialog_data.get('account_id')
     base = dialog_manager.dialog_data.get('base')
-    message_id = dialog_manager.dialog_data.get('message_id')
-    chat_id = dialog_manager.dialog_data.get('chat_id')
+    text = dialog_manager.dialog_data.get('text')
     account = await session.get_account(account_id)
     msg = await clb.message.answer('Начался процесс рассылки по базе пользователей, '
                                    'обычно он занимает от 3 до 7 минут, пожалуйста ожидайте')
-    await process_malling(account.account_name, base, clb.from_user.id, message_id, chat_id, clb.bot)
+    results = await process_malling(account.account_name, base, clb.from_user.id, text, clb.bot)
     try:
         await msg.delete()
     except Exception:
         ...
+    text = ("📬 Рассылка завершена\n"
+            f"✅ Успешно: {len(results['sent'])}\n"
+            f"🚫 Заблокировали: {len(results['blocked'])}\n"
+            f"❌ Не найдены: {len(results['not_found'])}\n"
+            f"⏸️ Отброшены в спам: {len(results['flood_wait'])}\n")
+    await clb.message.answer(text)
     dialog_manager.dialog_data.clear()
     await dialog_manager.switch_to(SubSG.start)
 
@@ -106,11 +116,11 @@ async def start_malling(clb: CallbackQuery, widget: Button, dialog_manager: Dial
 async def rate_choose(clb: CallbackQuery, widget: Button, dialog_manager: DialogManager):
     months = int(clb.data.split('_')[0])
     if months == 1:
-        price = 10
+        price = 1000
     elif months == 3:
-        price = 20
+        price = 2000
     else:
-        price = 30
+        price = 3000
     data = {
         'months': months,
         'amount': price
@@ -157,7 +167,12 @@ async def del_account_confirm_getter(event_from_user: User, dialog_manager: Dial
 async def del_account(clb: CallbackQuery, button: Button, dialog_manager: DialogManager):
     session: DataInteraction = dialog_manager.middleware_data.get('session')
     account_id = dialog_manager.dialog_data.get('account_id')
+    account = await session.get_account(account_id)
     await session.del_account(account_id)
+    try:
+        os.remove(f'accounts/{clb.from_user.id}_{account.account_name.replace(" ", "_")}')
+    except Exception:
+        ...
     await clb.answer('Аккаунт был успешно удален')
     dialog_manager.dialog_data.clear()
     await dialog_manager.switch_to(SubSG.accounts)
@@ -174,8 +189,8 @@ async def get_name(msg: Message, widget: ManagedTextInput, dialog_manager: Dialo
 
 async def phone_get(msg: Message, widget: ManagedTextInput, dialog_manager: DialogManager, text: str):
     print('Начало соединения')
-    name = dialog_manager.dialog_data.get('nam ')
-    client = Client(f'accounts/{msg.from_user.id}_{name}', config.user_bot.api_id, config.user_bot.api_hash)
+    name = dialog_manager.dialog_data.get('name')
+    client = Client(f'accounts/{msg.from_user.id}_{name.replace(" ", "_")}', config.user_bot.api_id, config.user_bot.api_hash)
     await client.connect()
     print(text, type(text))
     try:

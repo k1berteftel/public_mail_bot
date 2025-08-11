@@ -1,3 +1,4 @@
+import asyncio
 import datetime
 import hmac
 import hashlib
@@ -30,14 +31,14 @@ def _get_signature(data: dict, api_key: str):
 async def get_freekassa_card(user_id: int, amount: int, months: int):
     url = 'https://api.fk.life/v1/orders/create'
     data = {
-        'shopId': 32219,
+        'shopId': 64586,
         'nonce': int(datetime.datetime.today().timestamp()),
         'us_userId': str(user_id),
         'us_months': str(months),
         'i': 36,
-        'email': f'{user_id}@stars-bot.ru',
-        'ip': '80.80.116.211',
-        'amount': str(float(amount)),
+        'email': f'{user_id}@xn--80aa3adxha4f.space.ru',
+        'ip': '5.35.94.138',
+        'amount': str(amount),
         'currency': 'RUB'
     }
     data = _get_signature(data, config.freekassa.api_key)
@@ -56,14 +57,14 @@ async def get_freekassa_card(user_id: int, amount: int, months: int):
 async def get_freekassa_sbp(user_id: int, amount: int, months: int):
     url = 'https://api.fk.life/v1/orders/create'
     data = {
-        'shopId': 32219,
+        'shopId': 64586,
         'nonce': int(datetime.datetime.today().timestamp()),
         'us_userId': str(user_id),
         'us_months': str(months),
-        'i': 44,
-        'email': f'{user_id}@stars-bot.ru',
-        'ip': '80.80.116.211',
-        'amount': str(float(amount)),
+        'i': 42,
+        'email': f'{user_id}@xn--80aa3adxha4f.space.ru',
+        'ip': '5.35.94.138',
+        'amount': str(amount),
         'currency': 'RUB'
     }
     data = _get_signature(data, config.freekassa.api_key)
@@ -161,3 +162,6 @@ async def _get_ton_usdt() -> float:
             resp = await res.json()
             ton = float(resp['market_data']['current_price']['usd'])
     return ton
+
+
+#print(asyncio.run(get_freekassa_sbp(1512512, 1000, 1)))

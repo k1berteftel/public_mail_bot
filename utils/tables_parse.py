@@ -80,7 +80,7 @@ def get_table(tables: list[str], name: str) -> str:
     sheet = wb.active
 
     for column in range(0, len(tables)):
-        c = sheet.cell(row=column, column=0)
+        c = sheet.cell(row=column+1, column=1)
         c.value = tables[column]
     wb.save(f'{name}.xlsx')
     return f'{name}.xlsx'
