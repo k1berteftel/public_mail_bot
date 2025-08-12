@@ -24,6 +24,7 @@ sessions = database.session()
 @router.post("/payment")
 async def ping(response: Request, us_months: str = Form(...),
                us_userId: str | int = Form(...), CUR_ID: str | int = Form(...)):
+    print(response.__dict__)
     user_id = int(us_userId)
     months = int(us_months)
     session = DataInteraction(sessions)

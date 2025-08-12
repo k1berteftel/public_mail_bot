@@ -114,7 +114,7 @@ class DataInteraction():
                 sub = user.sub + relativedelta(months=months)
             else:
                 new = True
-                sub = datetime.datetime.now() + relativedelta(months=3)
+                sub = datetime.datetime.now() + relativedelta(months=months)
         async with self._sessions() as session:
             await session.execute(update(UsersTable).where(UsersTable.user_id == user_id).values(
                 sub=sub
