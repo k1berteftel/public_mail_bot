@@ -23,9 +23,9 @@ user_dialog = Dialog(
     Window(
         Const('⌛️Выберите тариф подписки'),
         Column(
-            Button(Const('👍1 месяц (...₽)'), id='1_month_choose', on_click=getters.rate_choose),
-            Button(Const('⚡️3 месяца (...₽)'), id='3_month_choose', on_click=getters.rate_choose),
-            Button(Const('🔥6 месяцев (...₽)'), id='6_month_choose', on_click=getters.rate_choose),
+            Button(Const('👍1 месяц (750₽)'), id='1_month_choose', on_click=getters.rate_choose),
+            Button(Const('⚡️3 месяца (2000₽)'), id='3_month_choose', on_click=getters.rate_choose),
+            Button(Const('🔥6 месяцев (3500₽)'), id='6_month_choose', on_click=getters.rate_choose),
         ),
         SwitchTo(Const('⬅️Назад'), id='back', state=startSG.start),
         state=startSG.rate_choose

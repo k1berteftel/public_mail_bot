@@ -35,7 +35,7 @@ async def process_malling(account: str, base: list[str], user_id: int, text: str
             text='❗️Сессия вашего аккаунта слетела, пожалуйста удалите и добавьте в бота данный аккаунт повторно'
         )
         return
-    delay = 15
+    delay = 20
     results = {
         "sent": [],
         "failed": [],

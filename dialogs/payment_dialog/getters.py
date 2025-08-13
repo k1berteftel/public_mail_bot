@@ -76,7 +76,6 @@ async def payment_choose(clb: CallbackQuery, widget: Button, dialog_manager: Dia
             ]
         )
         price = int(round(amount / 1.6, 0))
-        price = 2
         prices = [LabeledPrice(label="XTR", amount=price)]
         await clb.message.answer_invoice(
             title='Покупка подписки',

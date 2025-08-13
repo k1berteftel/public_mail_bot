@@ -61,7 +61,7 @@ async def get_freekassa_sbp(user_id: int, amount: int, months: int):
         'nonce': int(datetime.datetime.today().timestamp()),
         'us_userId': str(user_id),
         'us_months': str(months),
-        'i': 42,
+        'i': 44,
         'email': f'{user_id}@xn--80aa3adxha4f.space.ru',
         'ip': '5.35.94.138',
         'amount': str(amount),
@@ -164,4 +164,4 @@ async def _get_ton_usdt() -> float:
     return ton
 
 
-#print(asyncio.run(get_freekassa_sbp(1512512, 1000, 1)))
+#print(asyncio.run(get_freekassa_sbp(1512512, 100, 1)))

@@ -275,11 +275,11 @@ async def start_malling(clb: CallbackQuery, widget: Button, dialog_manager: Dial
 async def rate_choose(clb: CallbackQuery, widget: Button, dialog_manager: DialogManager):
     months = int(clb.data.split('_')[0])
     if months == 1:
-        price = 1000
+        price = 750
     elif months == 3:
         price = 2000
     else:
-        price = 3000
+        price = 3500
     data = {
         'months': months,
         'amount': price
