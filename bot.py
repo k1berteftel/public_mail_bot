@@ -17,6 +17,7 @@ from app.pay_application import router
 from storage.nats_storage import NatsStorage
 from utils.nats_connect import connect_to_nats
 from database.build import PostgresBuild
+from database.action_data_class import DataInteraction
 from database.model import Base
 from config_data.config import load_config, Config
 from handlers.user_handlers import user_router
@@ -52,6 +53,8 @@ async def run_aiogram():
     #await database.drop_tables(Base)
     #await database.create_tables(Base)
     session = database.session()
+    db = DataInteraction(session)
+    await db.update_user_sub(7830831839, 1)
 
     scheduler: AsyncIOScheduler = AsyncIOScheduler()
     scheduler.start()
