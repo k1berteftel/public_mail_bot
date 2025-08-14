@@ -1,6 +1,6 @@
-from aiogram.types import CallbackQuery, User, Message
+from aiogram.types import CallbackQuery, User, Message, ContentType
 from aiogram_dialog import DialogManager, ShowMode
-from aiogram_dialog.api.entities import MediaAttachment
+from aiogram_dialog.api.entities import MediaAttachment, MediaId
 from aiogram_dialog.widgets.kbd import Button, Select
 from aiogram_dialog.widgets.input import ManagedTextInput
 
@@ -26,7 +26,10 @@ async def start_getter(event_from_user: User, dialog_manager: DialogManager, **k
             'более важных задач. Больше никакой ручной работы — все быстро, удобно и эффективно.\n\n<em>🌟 Начните '
             'использовать «Вашего Рассыльщика» уже сегодня и почувствуйте, как ваша работа становится проще и '
             'продуктивнее!</em>')
+    media_id = MediaId(file_id='AgACAgIAAxkBAAIDEWid475ExIzKWuX-YsxN03gn7W3MAAJgETIb_cLxSMSqt9_WMrMEAQADAgADeQADNgQ')
+    media = MediaAttachment(type=ContentType.PHOTO, file_id=media_id)
     return {
+        'media': media,
         'text': text,
         'admin': admin
     }

@@ -54,7 +54,7 @@ async def run_aiogram():
     #await database.create_tables(Base)
     session = database.session()
     db = DataInteraction(session)
-    await db.update_user_sub(7830831839, 1)
+    #await db.update_user_sub(7830831839, 1)
 
     scheduler: AsyncIOScheduler = AsyncIOScheduler()
     scheduler.start()

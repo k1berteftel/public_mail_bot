@@ -11,6 +11,7 @@ from states.state_groups import SubSG, adminSG
 
 sub_dialog = Dialog(
     Window(
+        DynamicMedia('media'),
         Format('<b>🏠Вы в главном меню</b>\n⌛️Подписка действительна до: {sub}'),
         Column(
             Button(Const('✉️Запустить рассылку'), id='mail_account_choose', on_click=getters.choose_account_switcher),

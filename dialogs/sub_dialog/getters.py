@@ -3,7 +3,7 @@ import os
 from aiogram import Bot
 from aiogram.types import CallbackQuery, User, Message, ContentType, FSInputFile
 from aiogram_dialog import DialogManager, ShowMode
-from aiogram_dialog.api.entities import MediaAttachment
+from aiogram_dialog.api.entities import MediaAttachment, MediaId
 from aiogram_dialog.widgets.kbd import Button, Select
 from aiogram_dialog.widgets.input import ManagedTextInput, MessageInput
 from pyrogram import Client
@@ -26,7 +26,12 @@ async def start_getter(event_from_user: User, dialog_manager: DialogManager, **k
     session: DataInteraction = dialog_manager.middleware_data.get('session')
     user = await session.get_user(event_from_user.id)
     text = user.sub.strftime("%d-%m-%Y")
-    return {'sub': text}
+    media_id = MediaId(file_id='AgACAgIAAxkBAAIDEWid475ExIzKWuX-YsxN03gn7W3MAAJgETIb_cLxSMSqt9_WMrMEAQADAgADeQADNgQ')
+    media = MediaAttachment(type=ContentType.PHOTO, file_id=media_id)
+    return {
+        'media': media,
+        'sub': text
+    }
 
 
 async def collect_base_getter(event_from_user: User, dialog_manager: DialogManager, **kwargs):

@@ -9,6 +9,7 @@ from states.state_groups import startSG, adminSG
 
 user_dialog = Dialog(
     Window(
+        DynamicMedia('media'),
         Format('{text}'),
         Column(
             SwitchTo(Const('👑Выбрать тариф'), id='rate_choose_switcher', state=startSG.rate_choose),
