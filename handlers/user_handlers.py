@@ -58,8 +58,3 @@ async def start_dialog(msg: Message, dialog_manager: DialogManager, session: Dat
         await dialog_manager.start(SubSG.start, mode=StartMode.RESET_STACK)
         return
     await dialog_manager.start(state=startSG.start, mode=StartMode.RESET_STACK)
-
-
-@user_router.message()
-async def get_photo(msg: Message):
-    print(msg.photo[-1].file_id)
