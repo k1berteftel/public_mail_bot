@@ -25,7 +25,7 @@ class DataInteraction():
             ))
             await session.commit()
 
-    async def add_user(self, user_id: int, username: str, name: str):
+    async def add_user(self, user_id: int, username: str, name: str, referral: int):
         if await self.check_user(user_id):
             return
         async with self._sessions() as session:
@@ -33,6 +33,7 @@ class DataInteraction():
                 user_id=user_id,
                 username=username,
                 name=name,
+                referral=referral
             ))
             await session.commit()
 

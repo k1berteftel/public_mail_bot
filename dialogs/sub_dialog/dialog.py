@@ -6,7 +6,7 @@ from aiogram_dialog.widgets.input import TextInput, MessageInput
 from aiogram_dialog.widgets.media import DynamicMedia
 
 from dialogs.sub_dialog import getters
-from states.state_groups import SubSG
+from states.state_groups import SubSG, adminSG
 
 
 sub_dialog = Dialog(
@@ -19,7 +19,8 @@ sub_dialog = Dialog(
             SwitchTo(Const('👑Продлить подписку'), id='rate_choose_switcher', state=SubSG.rate_choose),
             SwitchTo(Const('📋Правила'), id='rules_switcher', state=SubSG.rules),
             Url(Const('🔎Инструкция'), id='manual_url', url=Const('https://telegra.ph/Instrukciya-po-ispolzovaniyu-bota-08-09')),
-            Url(Const('🔗Тех.поддержка'), id='tech_url', url=Const('https://t.me/Leggit_Russia'))
+            Url(Const('🔗Тех.поддержка'), id='tech_url', url=Const('https://t.me/Leggit_Russia')),
+            Start(Const('Админ панель'), id='admin', state=adminSG.start, when='admin')
         ),
         getter=getters.start_getter,
         state=SubSG.start

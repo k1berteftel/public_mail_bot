@@ -256,7 +256,7 @@ async def start_malling(clb: CallbackQuery, widget: Button, dialog_manager: Dial
     text = dialog_manager.dialog_data.get('text')
     account = await session.get_account(account_id)
     msg = await clb.message.answer('Начался процесс рассылки по базе пользователей, '
-                                   'обычно он занимает от 3 до 7 минут, пожалуйста ожидайте')
+                                   'обычно он занимает от 3 до 15 минут в зависимости от собранной базы, пожалуйста ожидайте')
     results = await process_malling(account.account_name, base, clb.from_user.id, text, clb.bot)
     try:
         await msg.delete()

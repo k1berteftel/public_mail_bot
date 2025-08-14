@@ -35,7 +35,7 @@ async def process_malling(account: str, base: list[str], user_id: int, text: str
             text='❗️Сессия вашего аккаунта слетела, пожалуйста удалите и добавьте в бота данный аккаунт повторно'
         )
         return
-    delay = 20
+    delay = 16
     results = {
         "sent": [],
         "failed": [],
@@ -52,7 +52,7 @@ async def process_malling(account: str, base: list[str], user_id: int, text: str
         clean_username = username.strip().lstrip('@')
         try:
             # Отправляем сообщение
-            await client.send_message(clean_username, text)
+            await client.send_message(clean_username, text, parse_mode=ParseMode.HTML)
             results["sent"].append(clean_username)
             logger.info(f"✅ Сообщение отправлено: @{clean_username}")
 

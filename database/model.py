@@ -18,6 +18,7 @@ class UsersTable(Base):
     name: Mapped[str] = mapped_column(VARCHAR)
     user_id: Mapped[int] = mapped_column(BigInteger, unique=True)
     active: Mapped[int] = mapped_column(Integer, default=1)
+    referral: Mapped[int] = mapped_column(BigInteger, default=None, nullable=True)
     sub: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=False), default=None, nullable=True)
     activity: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=False), default=func.now())
     entry: Mapped[datetime.datetime] = mapped_column(DateTime(timezone=False), default=func.now())

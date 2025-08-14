@@ -15,7 +15,7 @@ user_router = Router()
 @user_router.message(CommandStart())
 async def start_dialog(msg: Message, dialog_manager: DialogManager, session: DataInteraction, scheduler: AsyncIOScheduler, command: CommandObject):
     args = command.args
-    #referral = None
+    referral = None
     if args:
         link_ids = await session.get_links()
         ids = [i.link for i in link_ids]
@@ -27,16 +27,16 @@ async def start_dialog(msg: Message, dialog_manager: DialogManager, session: Dat
             deep_list = [i.link for i in deeplinks]
             if args in deep_list:
                 await session.add_entry(args)
-            #try:
-                #args = int(args)
-                #users = [user.user_id for user in await session.get_users()]
-                #if args in users:
-                    #referral = args
+            try:
+                args = int(args)
+                users = [user.user_id for user in await session.get_users()]
+                if args in users:
+                    referral = args
                     #await session.add_refs(args)
-            #except Exception as err:
-                #print(err)
+            except Exception as err:
+                print(err)
     await session.add_user(msg.from_user.id, msg.from_user.username if msg.from_user.username else 'Отсутствует',
-                           msg.from_user.full_name)
+                           msg.from_user.full_name, referral)
     if dialog_manager.has_context():
         await dialog_manager.done()
         try:
