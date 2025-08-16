@@ -10,7 +10,7 @@ from aiogram_dialog.widgets.input import ManagedTextInput, MessageInput
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from utils.build_ids import get_random_id
-from utils.schedulers import send_messages
+from utils.schedulers import send_messages, check_sub
 from database.action_data_class import DataInteraction
 from config_data.config import load_config, Config
 from states.state_groups import startSG, adminSG
@@ -20,6 +20,7 @@ async def get_static(clb: CallbackQuery, widget: Button, dialog_manager: DialogM
     session: DataInteraction = dialog_manager.middleware_data.get('session')
     users = await session.get_users()
     active = 0
+    subs = 0
     entry = {
         'today': 0,
         'yesterday': 0,
@@ -29,6 +30,8 @@ async def get_static(clb: CallbackQuery, widget: Button, dialog_manager: DialogM
     for user in users:
         if user.active:
             active += 1
+        if user.sub:
+            subs += 1
         for day in range(0, 3):
             #print(user.entry.date(), (datetime.datetime.today() - datetime.timedelta(days=day)).date())
             if user.entry.date() == (datetime.datetime.today() - datetime.timedelta(days=day)).date():
@@ -43,7 +46,8 @@ async def get_static(clb: CallbackQuery, widget: Button, dialog_manager: DialogM
 
     text = (f'<b>Статистика на {datetime.datetime.today().strftime("%d-%m-%Y")}</b>\n\nВсего пользователей: {len(users)}'
             f'\n - Активные пользователи(не заблокировали бота): {active}\n - Пользователей заблокировали '
-            f'бота: {len(users) - active}\n - Провзаимодействовали с ботом за последние 24 часа: {activity}\n\n'
+            f'бота: {len(users) - active}\n - Провзаимодействовали с ботом за последние 24 часа: {activity}\n'
+            f' - Людей с подпиской: {subs}\n\n'
             f'<b>Прирост аудитории:</b>\n - За сегодня: +{entry.get("today")}\n - Вчера: +{entry.get("yesterday")}'
             f'\n - Позавчера: + {entry.get("2_day_ago")}')
     await clb.message.answer(text=text)
@@ -62,6 +66,48 @@ async def get_users_txt(clb: CallbackQuery, widget: Button, dialog_manager: Dial
         os.remove('users.txt')
     except Exception:
         ...
+
+
+async def get_user_id(msg: Message, widget: ManagedTextInput, dialog_manager: DialogManager, text: str):
+    session: DataInteraction = dialog_manager.middleware_data.get('session')
+    try:
+        user_id = int(text)
+        user = await session.get_user(user_id)
+    except Exception:
+        if not text.startswith('@'):
+            await msg.answer('Вы ввели данные не в том формате, пожалуйста попробуйте снова"')
+            return
+        user = await session.get_user_by_username(text[1::])
+    if not user:
+        await msg.answer('К сожалению такого пользователя не найдено в боте, пожалуйста попробуйте снова')
+        return
+    dialog_manager.dialog_data['user_id'] = user.user_id
+    await dialog_manager.switch_to(adminSG.get_days)
+
+
+async def get_days(msg: Message, widget: ManagedTextInput, dialog_manager: DialogManager, text: str):
+    try:
+        days = int(text)
+    except Exception:
+        await msg.answer('Кол-во дней должно быть числом, пожалуйста попробуйте снова')
+        return
+    session: DataInteraction = dialog_manager.middleware_data.get('session')
+
+    user_id = dialog_manager.dialog_data.get("user_id")
+    scheduler: AsyncIOScheduler = dialog_manager.middleware_data.get('scheduler')
+    await session.update_user_days(user_id, days)
+    job_id = f'check_sub_{user_id}'
+    job = scheduler.get_job(job_id)
+    if not job:
+        scheduler.add_job(
+            check_sub,
+            'interval',
+            args=[msg.bot, user_id, session, scheduler],
+            id=job_id,
+            days=1
+        )
+    await msg.answer('Подписка пользователя была успешно обновлена')
+    await dialog_manager.switch_to(adminSG.start, show_mode=ShowMode.DELETE_AND_SEND)
 
 
 async def deeplink_menu_getter(dialog_manager: DialogManager, **kwargs):

@@ -123,6 +123,15 @@ class DataInteraction():
             await session.commit()
         return new
 
+    async def update_user_days(self, user_id: int, days: int):
+        user = await self.get_user(user_id)
+        async with self._sessions() as session:
+            await session.execute(update(UsersTable).where(UsersTable.user_id).values(
+                sub=UsersTable.sub + datetime.timedelta(days=days) if user.sub else
+                datetime.datetime.today() + datetime.timedelta(days=days)
+            ))
+            await session.commit()
+
     async def set_activity(self, user_id: int):
         async with self._sessions() as session:
             await session.execute(update(UsersTable).where(UsersTable.user_id == user_id).values(

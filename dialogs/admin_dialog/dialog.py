@@ -14,6 +14,7 @@ admin_dialog = Dialog(
         Const('Админ панель'),
         Column(
             Button(Const('📊 Получить статистику'), id='get_static', on_click=getters.get_static),
+            SwitchTo(Const('Выдать подписку'), id='get_user_id_switcher', state=adminSG.get_user_id),
             SwitchTo(Const('🛫Сделать рассылку'), id='mailing_menu_switcher', state=adminSG.get_mail),
             SwitchTo(Const('🔗 Управление диплинками'), id='deeplinks_menu_switcher', state=adminSG.deeplink_menu),
             SwitchTo(Const('👥 Управление админами'), id='admin_menu_switcher', state=adminSG.admin_menu),
@@ -21,6 +22,24 @@ admin_dialog = Dialog(
         ),
         Cancel(Const('Назад'), id='close_admin'),
         state=adminSG.start
+    ),
+    Window(
+        Const('Введите юзернейм или User ID пользователя которому надо выдать подписку в боте'),
+        TextInput(
+            id='get_user_id',
+            on_success=getters.get_user_id
+        ),
+        SwitchTo(Const('🔙 Назад'), id='back', state=adminSG.start),
+        state=adminSG.get_user_id
+    ),
+    Window(
+        Const('Введите кол-во дней, которое вы хотели бы выдать данному пользователю'),
+        TextInput(
+            id='get_days',
+            on_success=getters.get_days
+        ),
+        SwitchTo(Const('🔙 Назад'), id='back_get_user_id', state=adminSG.get_user_id),
+        state=adminSG.get_days
     ),
     Window(
         Format('🔗 *Меню управления диплинками*\n\n'

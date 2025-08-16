@@ -42,12 +42,19 @@ class PaymentSG(StatesGroup):
 
 class adminSG(StatesGroup):
     start = State()
+
     get_mail = State()
     get_time = State()
     get_keyboard = State()
     confirm_mail = State()
+
     deeplink_menu = State()
     deeplink_del = State()
+
     admin_menu = State()
     admin_del = State()
     admin_add = State()
+
+    subs_menu = State()
+    get_user_id = State()
+    get_days = State()
