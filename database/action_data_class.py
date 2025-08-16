@@ -126,9 +126,9 @@ class DataInteraction():
     async def update_user_days(self, user_id: int, days: int):
         user = await self.get_user(user_id)
         async with self._sessions() as session:
-            await session.execute(update(UsersTable).where(UsersTable.user_id).values(
+            await session.execute(update(UsersTable).where(UsersTable.user_id == user_id).values(
                 sub=UsersTable.sub + datetime.timedelta(days=days) if user.sub else
-                datetime.datetime.today() + datetime.timedelta(days=days)
+                datetime.datetime.now() + datetime.timedelta(days=days)
             ))
             await session.commit()
 
