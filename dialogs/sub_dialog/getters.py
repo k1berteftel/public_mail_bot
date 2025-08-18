@@ -6,11 +6,13 @@ from aiogram_dialog import DialogManager, ShowMode
 from aiogram_dialog.api.entities import MediaAttachment, MediaId
 from aiogram_dialog.widgets.kbd import Button, Select
 from aiogram_dialog.widgets.input import ManagedTextInput, MessageInput
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pyrogram import Client
 from pyrogram.types import SentCode
 from pyrogram.errors import PasswordHashInvalid
 
 from utils.malling_funcs import process_malling
+from utils.build_ids import get_random_id
 from utils.collect_funcs import collect_users_base, get_channels
 from utils.usernames_utils import add_usernames
 from utils.tables_parse import load_usernames, get_table
@@ -24,11 +26,17 @@ config: Config = load_config()
 
 async def start_getter(event_from_user: User, dialog_manager: DialogManager, **kwargs):
     session: DataInteraction = dialog_manager.middleware_data.get('session')
+    admin = False
+    admins = [*config.bot.admin_ids]
+    admins.extend([admin.user_id for admin in await session.get_admins()])
+    if event_from_user.id in admins:
+        admin = True
     user = await session.get_user(event_from_user.id)
     text = user.sub.strftime("%d-%m-%Y")
     media_id = MediaId(file_id='AgACAgIAAxkBAAIDEWid475ExIzKWuX-YsxN03gn7W3MAAJgETIb_cLxSMSqt9_WMrMEAQADAgADeQADNgQ')
     media = MediaAttachment(type=ContentType.PHOTO, file_id=media_id)
     return {
+        'admin': admin,
         'media': media,
         'sub': text
     }
@@ -256,23 +264,25 @@ async def cancel_malling(clb: CallbackQuery, widget: Button, dialog_manager: Dia
 
 async def start_malling(clb: CallbackQuery, widget: Button, dialog_manager: DialogManager):
     session: DataInteraction = dialog_manager.middleware_data.get('session')
+    scheduler: AsyncIOScheduler = dialog_manager.middleware_data.get('scheduler')
     account_id = dialog_manager.dialog_data.get('account_id')
     base = dialog_manager.dialog_data.get('base')
     text = dialog_manager.dialog_data.get('text')
     account = await session.get_account(account_id)
-    msg = await clb.message.answer('Начался процесс рассылки по базе пользователей, '
-                                   'обычно он занимает от 3 до 15 минут в зависимости от собранной базы, пожалуйста ожидайте')
-    results = await process_malling(account.account_name, base, clb.from_user.id, text, clb.bot)
-    try:
-        await msg.delete()
-    except Exception:
-        ...
-    text = ("📬 Рассылка завершена\n"
-            f"✅ Успешно: {len(results['sent'])}\n"
-            f"🚫 Заблокировали: {len(results['blocked'])}\n"
-            f"❌ Не найдены: {len(results['not_found'])}\n"
-            f"⏸️ Отброшены в спам: {len(results['flood_wait'])}\n")
-    await clb.message.answer(text)
+    msg = await clb.message.answer('📤Начался процесс рассылки по базе пользователей, '
+                                   'обычно он занимает от 3 до 15 минут в зависимости от собранной базы, '
+                                   'пожалуйста ожидайте\nПо завершению рассылки вы получите уведомление')
+    job_id = f'{clb.from_user.id}_{account_id}'
+    job = scheduler.get_job(job_id)
+    if job:
+        await clb.answer('❗️В данный момент на этом аккаунте уже запущенна, задача, пожалуйста дождитесь ее завершения')
+        return
+    scheduler.add_job(
+        process_malling,
+        'interval',
+        args=[account.account_name, base, clb.from_user.id, text, clb.bot, msg.message_id, job_id, scheduler],
+        id=job_id
+    )
     dialog_manager.dialog_data.clear()
     await dialog_manager.switch_to(SubSG.start)
 
@@ -284,7 +294,7 @@ async def rate_choose(clb: CallbackQuery, widget: Button, dialog_manager: Dialog
     elif months == 3:
         price = 2000
     else:
-        price = 3500
+        price = 3750
     data = {
         'months': months,
         'amount': price

@@ -13,6 +13,7 @@ from pyrogram.errors import (
 )
 from typing import List
 from aiogram import Bot
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from pyrogram.enums.parse_mode import ParseMode
 
 from config_data.config import load_config, Config
@@ -24,7 +25,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-async def process_malling(account: str, base: list[str], user_id: int, text: str, bot: Bot):
+async def process_malling(account: str, base: list[str], user_id: int, text: str, bot: Bot, msg_to_del: int, job_id: str, scheduler: AsyncIOScheduler):
     client = Client(f'accounts/{user_id}_{account.replace(" ", "_")}', api_id=config.user_bot.api_id, api_hash=config.user_bot.api_hash)
     try:
         await client.start()
@@ -34,6 +35,9 @@ async def process_malling(account: str, base: list[str], user_id: int, text: str
             chat_id=user_id,
             text='❗️Сессия вашего аккаунта слетела, пожалуйста удалите и добавьте в бота данный аккаунт повторно'
         )
+        job = scheduler.get_job(job_id)
+        if job:
+            job.remove()
         return
     delay = 16
     results = {
@@ -101,8 +105,23 @@ async def process_malling(account: str, base: list[str], user_id: int, text: str
     print(f"🚫 Заблокировали: {len(results['blocked'])}")
     print(f"❌ Не найдены: {len(results['not_found'])}")
     print(f"⏸️ FloodWait: {len(results['flood_wait'])}")
+
+    text = ("📬 Рассылка завершена\n"
+            f"✅ Успешно: {len(results['sent'])}\n"
+            f"🚫 Заблокировали: {len(results['blocked'])}\n"
+            f"❌ Не найдены: {len(results['not_found'])}\n"
+            f"⏸️ Отброшены в спам: {len(results['flood_wait'])}\n")
+    try:
+        await bot.delete_message(
+            chat_id=user_id,
+            message_id=msg_to_del
+        )
+    except Exception:
+        ...
     await bot.send_message(
         chat_id=user_id,
-        text=f'Рассылка прошла успешно!\n\nСообщение получило <em>{len(results["sent"])}</em> пользователей'
+        text=text
     )
-    return results
+    job = scheduler.get_job(job_id)
+    if job:
+        job.remove()

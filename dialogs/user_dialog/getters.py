@@ -42,7 +42,7 @@ async def rate_choose(clb: CallbackQuery, widget: Button, dialog_manager: Dialog
     elif months == 3:
         price = 2000
     else:
-        price = 3500
+        price = 3750
     data = {
         'months': months,
         'amount': price
