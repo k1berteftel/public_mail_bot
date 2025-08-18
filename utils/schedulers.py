@@ -74,10 +74,13 @@ async def check_sub(bot: Bot, user_id: int, session: DataInteraction, scheduler:
         if job:
             job.remove()
     if text:
-        await bot.send_message(
-            chat_id=user_id,
-            text=text
-        )
+        try:
+            await bot.send_message(
+                chat_id=user_id,
+                text=text
+            )
+        except Exception:
+            await session.set_active(user_id, 0)
 
 
 async def start_schedulers(bot: Bot, session: DataInteraction, scheduler: AsyncIOScheduler):
@@ -88,10 +91,13 @@ async def start_schedulers(bot: Bot, session: DataInteraction, scheduler: AsyncI
             user_id = user.user_id
             if dif <= 0:
                 text = 'К сожалению срок действия подписки подошел к концу'
-                await bot.send_message(
-                    chat_id=user_id,
-                    text=text
-                )
+                try:
+                    await bot.send_message(
+                        chat_id=user_id,
+                        text=text
+                    )
+                except Exception:
+                    await session.set_active(user_id, 0)
                 await session.update_user_sub(user_id, None)
                 continue
             else:
