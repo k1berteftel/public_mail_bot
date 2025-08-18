@@ -69,6 +69,7 @@ async def check_sub(bot: Bot, user_id: int, session: DataInteraction, scheduler:
     if dif <= 0:
         text = 'К сожалению срок действия подписки подошел к концу'
         job_id = f'check_sub_{user_id}'
+        await session.update_user_sub(user_id, None)
         job = scheduler.get_job(job_id=job_id)
         if job:
             job.remove()
@@ -77,3 +78,28 @@ async def check_sub(bot: Bot, user_id: int, session: DataInteraction, scheduler:
             chat_id=user_id,
             text=text
         )
+
+
+async def start_schedulers(bot: Bot, session: DataInteraction, scheduler: AsyncIOScheduler):
+    users = await session.get_users()
+    for user in users:
+        if user.sub:
+            dif = (user.sub - datetime.now()).days
+            user_id = user.user_id
+            if dif <= 0:
+                text = 'К сожалению срок действия подписки подошел к концу'
+                await bot.send_message(
+                    chat_id=user_id,
+                    text=text
+                )
+                await session.update_user_sub(user_id, None)
+                continue
+            else:
+                job_id = f'check_sub_{user_id}'
+                scheduler.add_job(
+                    check_sub,
+                    'interval',
+                    args=[bot, user_id, session, scheduler],
+                    id=job_id,
+                    days=1
+                )

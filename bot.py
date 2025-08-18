@@ -16,6 +16,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from app.pay_application import router
 from storage.nats_storage import NatsStorage
 from utils.nats_connect import connect_to_nats
+from utils.schedulers import start_schedulers
 from database.build import PostgresBuild
 from database.action_data_class import DataInteraction
 from database.model import Base
@@ -53,6 +54,7 @@ async def run_aiogram():
     #await database.drop_tables(Base)
     #await database.create_tables(Base)
     session = database.session()
+    db = DataInteraction(session)
 
     scheduler: AsyncIOScheduler = AsyncIOScheduler()
     scheduler.start()
@@ -62,6 +64,8 @@ async def run_aiogram():
 
     bot = Bot(token=config.bot.token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher()#storage=storage)
+
+    await start_schedulers(bot, db, scheduler)
 
     # подключаем роутеры
     dp.include_routers(user_router, payment_router, *get_dialogs())
