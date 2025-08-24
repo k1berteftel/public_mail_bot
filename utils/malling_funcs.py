@@ -51,8 +51,11 @@ async def process_malling(account: str, base: list[str], user_id: int, text: str
     }
     print(base)
     print('base: ', len(base))
-    for username in base:
+    users = await client.get_users(base)
+
+    for user in users:
         # Очищаем юзернейм
+        username = user.username
         clean_username = username.strip().lstrip('@')
         try:
             # Отправляем сообщение
@@ -62,7 +65,7 @@ async def process_malling(account: str, base: list[str], user_id: int, text: str
 
         except PeerFlood:
             results["not_found"].append(clean_username)
-            logger.warning(f"❌ Пользователь не найден: @{clean_username}")
+            logger.warning(f"❌ Пользователь не найден (спам): @{clean_username}")
 
         except UserIsBlocked:
             results["blocked"].append(clean_username)
@@ -84,7 +87,7 @@ async def process_malling(account: str, base: list[str], user_id: int, text: str
             # Важно: нужно подождать указанное время
             wait_seconds = e.value
             logger.error(f"⏱️ FloodWait: ждём {wait_seconds} секунд...")
-            await asyncio.sleep(wait_seconds)
+            await asyncio.sleep(wait_seconds + 10)
             # Можно повторить попытку, но лучше остановиться
             results["flood_wait"].append({"username": clean_username, "wait": wait_seconds})
             break  # Прерываем, чтобы не продолжать после большого wait
@@ -109,8 +112,11 @@ async def process_malling(account: str, base: list[str], user_id: int, text: str
     text = ("📬 Рассылка завершена\n"
             f"✅ Успешно: {len(results['sent'])}\n"
             f"🚫 Заблокировали: {len(results['blocked'])}\n"
-            f"❌ Не найдены: {len(results['not_found'])}\n"
-            f"⏸️ Отброшены в спам: {len(results['flood_wait'])}\n")
+            f"❌ Не найдены (спам): {len(results['not_found'])}\n"
+            f"⏸️ Отброшены в спам: {len(results['flood_wait'])}\n"
+            f"⚠️ Неверный формат юзернейма: {len(results['invalid'])}\n"
+            f"⛔ Нет прав на отправку: {len(results['write_forbidden'])}\n"
+            f"❌ Неизвестная ошибка: {len(results['failed'])}")
     try:
         await bot.delete_message(
             chat_id=user_id,
@@ -125,3 +131,14 @@ async def process_malling(account: str, base: list[str], user_id: int, text: str
     job = scheduler.get_job(job_id)
     if job:
         job.remove()
+
+
+async def test_func():
+    app: Client = Client('1236300146_Leggit_Mail')
+    async with app:
+        user = await app.get_users('@Dyrachekk')
+        print(user.full_name)
+        print(user.__dict__)
+
+
+asyncio.run(test_func())
