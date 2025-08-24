@@ -141,4 +141,4 @@ async def test_func():
         print(user.__dict__)
 
 
-asyncio.run(test_func())
+#asyncio.run(test_func())
