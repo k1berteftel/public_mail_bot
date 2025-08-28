@@ -344,7 +344,8 @@ async def del_account(clb: CallbackQuery, button: Button, dialog_manager: Dialog
     account = await session.get_account(account_id)
     await session.del_account(account_id)
     try:
-        os.remove(f'accounts/{clb.from_user.id}_{account.account_name.replace(" ", "_")}')
+        os.remove(f'accounts/{clb.from_user.id}_{account.account_name.replace(" ", "_")}.session')
+        os.remove(f'accounts/{clb.from_user.id}_{account.account_name.replace(" ", "_")}.session-journal')
     except Exception:
         ...
     await clb.answer('Аккаунт был успешно удален')
@@ -354,7 +355,7 @@ async def del_account(clb: CallbackQuery, button: Button, dialog_manager: Dialog
 
 async def get_name(msg: Message, widget: ManagedTextInput, dialog_manager: DialogManager, text: str):
     session: DataInteraction = dialog_manager.middleware_data.get('session')
-    if text in [account.account_name for account in  await session.get_user_accounts(msg.from_user.id)]:
+    if text in [account.account_name for account in await session.get_user_accounts(msg.from_user.id)]:
         await msg.answer('❗️У вас уже есть аккаунт с таким названием, пожалуйста придумайте другое название')
         return
     dialog_manager.dialog_data['name'] = text
